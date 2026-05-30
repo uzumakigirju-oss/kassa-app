@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>POS-Терминал</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0; padding: 15px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .product-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border: none; border-radius: 10px;
+            padding: 15px; text-align: center;
+            font-size: 16px; font-weight: bold;
+            color: var(--tg-theme-text-color, #000000);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .product-card:active { transform: scale(0.96); }
+        .cart-panel {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 15px; border-radius: 10px;
+        }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-pay {
+            flex: 1; padding: 15px; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: bold; color: white;
+        }
+        .btn-card { background-color: #007bff; }
+        .btn-cash { background-color: #28a745; }
+    </style>
+</head>
+<body>
+
+    <h2>🛒 Меню</h2>
+    <div class="grid" id="menu"></div>
+
+    <div class="cart-panel">
+        <h3>🧾 Текущий чек</h3>
+        <div id="cart-items"></div>
+        <hr>
+        <h2>Итого: <span id="total-price">0</span> лей</h2>
+
+        <div class="btn-row">
+            <button class="btn-pay btn-card" onclick="checkout('Карта')">💳 Картой</button>
+            <button class="btn-pay btn-cash" onclick="checkout('Наличные')">💵 Наличными</button>
+        </div>
+        <button onclick="clearCart()" style="margin-top:10px; width:100%; padding:10px; border-radius:10px; border:none; background:#dc3545; color:white;">Очистить чек</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        // Каталог продукции
+        const catalog = [
+            { id: 1, name: "Трюфельный брауни", price: 45, owner_id: 141076129 },
+            { id: 2, name: "Шоколадная колбаса", price: 30, owner_id: 141076129 },
+            { id: 3, name: "Корнулеце (порция)", price: 40, owner_id: 141076129 },
+            { id: 4, name: "Эспрессо", price: 25, owner_id: 141076129 }
+        ];
+
+        let cart = [];
+
+        function renderMenu() {
+            const menu = document.getElementById('menu');
+            catalog.forEach(p => {
+                let btn = document.createElement('button');
+                btn.className = 'product-card';
+                btn.innerHTML = `${p.name}<br><small>${p.price} лей</small>`;
+                btn.onclick = () => addToCart(p);
+                menu.appendChild(btn);
+            });
+        }
+
+        function addToCart(product) {
+            let item = cart.find(i => i.id === product.id);
+            if (item) item.qty++;
+            else cart.push({ ...product, qty: 1 });
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = [];
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let sum = 0;
+
+            cart.forEach(item => {
+                sum += item.price * item.qty;
+                container.innerHTML += `<div class="cart-item"><span>${item.name} x${item.qty}</span> <span>${item.price * item.qty} л.</span></div>`;
+            });
+
+            document.getElementById('total-price').innerText = sum;
+        }
+
+        function checkout(paymentType) {
+            if (cart.length === 0) return;
+
+            // Формируем пакет данных и отправляем в Python-бот
+            const data = JSON.stringify({ cart: cart, payment_type: paymentType });
+            tg.sendData(data);
+        }
+
+        renderMenu();
+    </script>
+</body>
+</html>

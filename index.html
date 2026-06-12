@@ -30,7 +30,7 @@
         }
 
         // Функция для получения реальных картинок товаров (3D рендеры из папки images)
-        function getImageUrlForProduct(name) {
+        function getImageUrlForProduct(name, ownerId) {
             const n = name.toLowerCase();
             if (n.includes('классика') && !n.includes('картошка')) return './images/klassika.webp';
             if (n.includes('ас.премиум') || n.includes('ас.лайт') || n.includes('ассорти')) return './images/assorti.webp';
@@ -39,6 +39,7 @@
             if (n.includes('орешек') || n.includes('орешки')) return './images/oreshek.webp';
             if (n.includes('грибочки')) return './images/gribochki.webp';
             if (n.includes('муравейник')) return './images/muraveynik.webp';
+            if ((n.includes('трубочк') || n.includes('трубочка')) && ownerId === ID_NINA) return './images/trubochki_nina.webp';
             if (n.includes('трубочк') || n.includes('трубочка')) return './images/trubochki.webp';
             if (n.includes('ириска')) return './images/iriska.webp';
             if (n.includes('овсянка')) return './images/ovsyanka.webp';
@@ -284,7 +285,7 @@
                 let btn = document.createElement('button');
                 btn.className = 'product-card';
                 btn.innerHTML = `
-                    <img src="${getImageUrlForProduct(p.name)}" alt="${p.name}">
+                    <img src="${getImageUrlForProduct(p.name, p.owner_id)}" alt="${p.name}">
                     <div class="product-info">
                         <span class="product-name">${p.name}</span>
                         <span class="product-price">${p.price} лей</span>
